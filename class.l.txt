@@ -1,0 +1,29 @@
+%{
+#include "y.tab.h"
+%}
+
+%%
+"class"     { return CLASS; }
+"public"    { return PUBLIC; }
+"private"   { return PRIVATE; }
+"protected" { return PROTECTED; }
+"int"       { return INT; }
+"double"    { return DOUBLE; }
+"char"      { return CHAR; }
+"void"      { return VOID; }
+[a-zA-Z_][a-zA-Z0-9_]* { return IDENTIFIER; }
+"{"         { return LBRACE; }
+"}"         { return RBRACE; }
+";"         { return SEMICOLON; }
+"("         { return LPAREN; }
+")"         { return RPAREN; }
+","         { return COMMA; }
+"="         { return EQUALS; }
+[ \t\n]     ; // Ignore whitespace and newlines
+.           { return yytext[0]; }
+
+%%
+
+int yywrap(void) {
+    return 1;
+}

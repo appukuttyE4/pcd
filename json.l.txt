@@ -1,0 +1,18 @@
+%{
+#include "y.tab.h"
+%}
+
+%%
+"{"             { return LBRACE; }
+"}"             { return RBRACE; }
+"["             { return LBRACKET; }
+"]"             { return RBRACKET; }
+":"             { return COLON; }
+","             { return COMMA; }
+[ \t\n\r]+     ; // Ignore whitespace
+\"(\\.|[^"])*\" { yylval.str = strdup(yytext); return STRING; }
+[0-9]+(\.[0-9]*)?([eE][-+]?[0-9]+)? { yylval.num = atof(yytext); return NUMBER; }
+"true"          { return TRUE; }
+"false"         { return FALSE; }
+"null"          { return NULL_VALUE; }
+.               { return yytext[0]; }

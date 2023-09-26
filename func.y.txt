@@ -1,0 +1,83 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void yyerror(const char* s);
+
+typedef struct {
+    char* name;
+    int num_args;
+} Function;
+
+Function function_table[100]; // Assuming a maximum of 100 functions
+
+int find_function(char* name) {
+    for (int i = 0; i < 100; i++) {
+        if (function_table[i].name && strcmp(function_table[i].name, name) == 0) {
+            return i;
+        }
+    }
+    return -1; // Function not found
+}
+
+%}
+
+%union {
+    int num;
+    char* str;
+}
+
+%token IDENTIFIER LPAREN RPAREN COMMA
+
+%type <str> function_call function_name arguments argument_list
+
+%%
+program: statement
+       | program statement
+       ;
+
+statement: function_decl
+         | function_call
+         ;
+
+function_decl: IDENTIFIER LPAREN argument_list RPAREN
+             {
+                 int index = find_function($1);
+                 if (index != -1) {
+                     // Add function to the table
+                     function_table[index].num_args = $3;
+                 } else {
+                     yyerror("Function declaration error");
+                 }
+             }
+             ;
+
+function_call: function_name LPAREN arguments RPAREN
+             {
+                 int index = find_function($1);
+                 if (index != -1) {
+                     if (function_table[index].num_args == $3) {
+                         printf("Function call: %s\n", $1);
+                     } else {
+                         yyerror("Function call argument count mismatch");
+                     }
+                 } else {
+                     yyerror("Undefined function");
+                 }
+             }
+             ;
+
+function_name: IDENTIFIER
+             ;
+
+arguments: argument_list
+         | /* Empty arguments */
+         ;
+
+argument_list: argument
+             | argument_list COMMA argument
+             ;
+
+argument: IDENTIFIER
+        ;

@@ -1,0 +1,71 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void yyerror(const char* s);
+
+%}
+
+%token CLASS PUBLIC PRIVATE PROTECTED INT DOUBLE CHAR VOID IDENTIFIER LBRACE RBRACE SEMICOLON LPAREN RPAREN COMMA EQUALS
+
+%%
+program: class_declaration
+       | program class_declaration
+       ;
+
+class_declaration: CLASS IDENTIFIER LBRACE class_body RBRACE SEMICOLON
+                 ;
+
+class_body: /* Empty class body, for simplicity */
+          | class_members
+          ;
+
+class_members: class_member
+             | class_members class_member
+             ;
+
+class_member: access_specifier member_declaration SEMICOLON
+            ;
+
+access_specifier: /* Empty access specifier, for simplicity */
+               | PUBLIC
+               | PRIVATE
+               | PROTECTED
+               ;
+
+member_declaration: data_member_declaration
+                 | function_member_declaration
+                 ;
+data_member_declaration: type_specifier IDENTIFIER SEMICOLON
+                      ;
+
+type_specifier: INT
+              | DOUBLE
+              | CHAR
+              | VOID
+              | IDENTIFIER
+              ;
+
+function_member_declaration: type_specifier IDENTIFIER LPAREN parameter_list RPAREN SEMICOLON
+                          ;
+
+parameter_list: /* Empty parameter list, for simplicity */
+              | parameter
+              ;
+
+parameter: type_specifier IDENTIFIER
+         | parameter COMMA type_specifier IDENTIFIER
+         ;
+
+%%
+
+void yyerror(const char* s) {
+    fprintf(stderr, "Syntax error: %s\n", s);
+}
+
+int main(void) {
+    yyparse();
+    printf("valid");
+    return 0;
+}

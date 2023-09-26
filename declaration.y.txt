@@ -1,0 +1,52 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+extern int yylex();
+extern char* strdup(const char*);
+
+void yyerror(const char* msg);
+
+%}
+
+%union {
+    int ival;
+    char* sval;
+}
+
+%token WHILE INT FLOAT CHAR ID INT_LITERAL
+
+%%
+
+program : statement_list
+
+statement_list : statement
+              | statement_list statement
+
+statement : while_statement
+          | declaration_statement
+
+while_statement : WHILE '(' expression ')' '{' statement_list '}'
+
+declaration_statement : type_specifier ID ';'
+
+type_specifier : INT
+               | FLOAT
+               | CHAR
+
+expression : ID
+           | INT_LITERAL
+
+%%
+
+void yyerror(const char* msg) {
+    fprintf(stderr, "Syntax error: %s\n", msg);
+    exit(1);
+}
+
+int main() {
+    yyparse();
+    printf("Syntax is correct.\n");
+    return 0;
+}

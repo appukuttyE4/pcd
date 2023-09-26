@@ -1,0 +1,39 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+
+void yyerror(const char* s);
+
+%}
+
+%token PLUS MINUS TIMES DIVIDE LPAREN RPAREN NUMBER
+
+%%
+program: expression
+       | program expression
+       ;
+
+expression: term
+          | expression PLUS term
+          | expression MINUS term
+          ;
+
+term: factor
+    | term TIMES factor
+    | term DIVIDE factor
+    ;
+
+factor: NUMBER
+      | LPAREN expression RPAREN
+      ;
+
+%%
+
+void yyerror(const char* s) {
+    fprintf(stderr, "Syntax error: %s\n", s);
+}
+
+int main(void) {
+    yyparse();
+    return 0;
+}

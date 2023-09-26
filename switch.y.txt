@@ -1,0 +1,36 @@
+%{
+#include <stdio.h>
+int yylex(void);
+void yyerror(const char* s);
+
+int current_case_value = -1; // To track the current case value
+
+%}
+
+%token SWITCH CASE DEFAULT BREAK NUM COLON SEMICOLON LPAREN RPAREN
+
+%%
+program: statement
+       | program statement
+       ;
+
+statement: switch_stmt
+         | other_stmt
+         ;
+
+switch_stmt: SWITCH LPAREN NUM RPAREN COLON cases DEFAULT COLON statements BREAK SEMICOLON
+          | SWITCH LPAREN NUM RPAREN COLON cases BREAK SEMICOLON
+          ;
+
+cases: CASE NUM COLON statements
+     | cases CASE NUM COLON statements
+     ;
+
+statements: statement
+          | statements statement
+          ;
+
+other_stmt: /* You can add other statements here if needed */
+          ;
+
+%%

@@ -1,0 +1,131 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void yyerror(const char* s);
+
+typedef struct {
+    char* name;
+} Node;
+
+typedef struct {
+    Node* from;
+    Node* to;
+} Edge;
+
+#define MAX_NODES 100
+#define MAX_EDGES 100
+
+Node nodes[MAX_NODES];
+int num_nodes = 0;
+
+Edge edges[MAX_EDGES];
+int num_edges = 0;
+
+%}
+
+%union {
+    char* str;
+}
+
+%token IDENTIFIER ARROW COMMA
+
+%type <str> node_list edge_list
+
+%%
+graph: node_list edge_list
+     ;
+
+node_list: IDENTIFIER
+         {
+             if (num_nodes < MAX_NODES) {
+                 nodes[num_nodes].name = $1;
+                 num_nodes++;
+             } else {
+                 yyerror("Maximum number of nodes exceeded.");
+             }
+         }
+         | node_list COMMA IDENTIFIER
+         {
+             if (num_nodes < MAX_NODES) {
+                 nodes[num_nodes].name = $3;
+                 num_nodes++;
+             } else {
+                 yyerror("Maximum number of nodes exceeded.");
+             }
+         }
+         ;
+
+edge_list: IDENTIFIER ARROW IDENTIFIER
+         {
+             if (num_edges < MAX_EDGES) {
+                 int from_index = -1;
+                 int to_index = -1;
+                 for (int i = 0; i < num_nodes; i++) {
+                     if (strcmp(nodes[i].name, $1) == 0) {
+                         from_index = i;
+                     }
+                     if (strcmp(nodes[i].name, $3) == 0) {
+                         to_index = i;
+                     }
+                 }
+                 if (from_index != -1 && to_index != -1) {
+                     edges[num_edges].from = &nodes[from_index];
+                     edges[num_edges].to = &nodes[to_index];
+                     num_edges++;
+                 } else {
+                     yyerror("Invalid node in edge definition.");
+                 }
+             } else {
+                 yyerror("Maximum number of edges exceeded.");
+             }
+         }
+         | edge_list COMMA IDENTIFIER ARROW IDENTIFIER
+         {
+             if (num_edges < MAX_EDGES) {
+                 int from_index = -1;
+                 int to_index = -1;
+                 for (int i = 0; i < num_nodes; i++) {
+                     if (strcmp(nodes[i].name, $3) == 0) {
+                         from_index = i;
+                     }
+                     if (strcmp(nodes[i].name, $5) == 0) {
+                         to_index = i;
+                     }
+                 }
+                 if (from_index != -1 && to_index != -1) {
+                     edges[num_edges].from = &nodes[from_index];
+                     edges[num_edges].to = &nodes[to_index];
+                     num_edges++;
+                 } else {
+                     yyerror("Invalid node in edge definition.");
+                 }
+             } else {
+                 yyerror("Maximum number of edges exceeded.");
+             }
+         }
+         ;
+
+%%
+
+void yyerror(const char* s) {
+    fprintf(stderr, "Parser error: %s\n", s);
+    exit(EXIT_FAILURE);
+}
+
+int main(void) {
+    yyparse();
+
+    printf("Parsed Nodes:\n");
+    for (int i = 0; i < num_nodes; i++) {
+        printf("Node: %s\n", nodes[i].name);
+    }
+
+    printf("Parsed Edges:\n");
+    for (int i = 0; i < num_edges; i++) {
+        printf("Edge: %s -> %s\n", edges[i].from->name, edges[i].to->name);
+    }
+
+    return 0;
+}

@@ -1,0 +1,61 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+%}
+
+%union {
+    int num;
+    char *id;
+}
+
+%token <num> NUMBER
+%token <id> IDENTIFIER
+%token SELECT INSERT UPDATE FROM INTO SET WHERE VALUES column
+%left '+' '-'
+%left '*' '/'
+
+%%
+
+query: select_stmt
+    | insert_stmt
+    | update_stmt
+    ;
+
+select_stmt: SELECT IDENTIFIER FROM IDENTIFIER WHERE condition
+    ;
+
+insert_stmt: INSERT INTO IDENTIFIER VALUES '(' NUMBER ',' NUMBER ')' ';'
+    ;
+
+update_stmt: UPDATE IDENTIFIER SET column '=' NUMBER WHERE condition
+    ;
+condition: expr
+    | expr '<' expr
+    | expr '>' expr
+    | expr '<' '=' expr
+    | expr '>' '=' expr
+    | expr '=' '=' expr
+    | expr '!' '=' expr
+    ;
+
+expr: expr '+' expr
+    | expr '-' expr
+    | expr '*' expr
+    | expr '/' expr
+    | NUMBER
+    | IDENTIFIER
+    ;
+
+%%
+
+int main() {
+    yyparse();
+    printf("Valid");
+    return 0;
+}
+
+void yyerror() {
+    printf("error");
+
+}

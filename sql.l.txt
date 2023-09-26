@@ -1,0 +1,21 @@
+%{
+#include "y.tab.h"
+%}
+
+%%
+"SELECT"    { return SELECT; }
+"INSERT"    { return INSERT; }
+"UPDATE"    { return UPDATE; }
+"FROM"      { return FROM; }
+"INTO"      { return INTO; }
+"SET"       { return SET; }
+"WHERE"     { return WHERE; }
+[0-9]+      { return NUMBER; }
+[a-zA-Z]+   { return IDENTIFIER; }
+[ \t\n]     ;
+.           { return yytext[0]; }
+%%
+
+int yywrap(void) {
+    return 1;
+}

@@ -1,0 +1,97 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void yyerror(const char* s);
+
+typedef struct {
+    char* key;
+    char* value;
+} KeyValuePair;
+
+#define MAX_OBJECT_MEMBERS 100
+#define MAX_ARRAY_ITEMS 100
+
+KeyValuePair object_members[MAX_OBJECT_MEMBERS];
+int num_object_members = 0;
+
+char* array_items[MAX_ARRAY_ITEMS];
+int num_array_items = 0;
+
+%}
+
+%union {
+    double num;
+    char* str;
+}
+
+%token LBRACE RBRACE LBRACKET RBRACKET COLON COMMA STRING NUMBER TRUE FALSE NULL_VALUE
+%type <str> object array object_member array_item
+
+%%
+json: object
+    | array
+    ;
+
+object: LBRACE RBRACE
+      | LBRACE object_member_list RBRACE
+      ;
+
+object_member_list: object_member
+                 | object_member_list COMMA object_member
+                 ;
+
+object_member: STRING COLON json
+            {
+                if (num_object_members < MAX_OBJECT_MEMBERS) {
+                    object_members[num_object_members].key = $1;
+                    object_members[num_object_members].value = $3;
+                    num_object_members++;
+                } else {
+                    yyerror("Maximum number of object members exceeded.");
+                }
+            }
+            ;
+
+array: LBRACKET RBRACKET
+     | LBRACKET array_item_list RBRACKET
+     ;
+
+array_item_list: array_item
+              | array_item_list COMMA array_item
+              ;
+
+array_item: json
+          {
+              if (num_array_items < MAX_ARRAY_ITEMS) {
+                  array_items[num_array_items] = $1;
+                  num_array_items++;
+              } else {
+                  yyerror("Maximum number of array items exceeded.");
+              }
+          }
+          ;
+
+%%
+
+void yyerror(const char* s) {
+    fprintf(stderr, "Parser error: %s\n", s);
+    exit(EXIT_FAILURE);
+}
+
+int main(void) {
+    yyparse();
+    
+    printf("Parsed JSON Object:\n");
+    for (int i = 0; i < num_object_members; i++) {
+        printf("Key: %s, Value: %s\n", object_members[i].key, object_members[i].value);
+    }
+
+    printf("Parsed JSON Array:\n");
+    for (int i = 0; i < num_array_items; i++) {
+        printf("Item: %s\n", array_items[i]);
+    }
+
+    return 0;
+}

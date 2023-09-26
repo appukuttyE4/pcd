@@ -1,0 +1,36 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+%}
+
+%token WHILE LPAREN RPAREN LBRACE RBRACE IDENTIFIER NUM SEMICOLON
+%start program
+
+%%
+program : statement
+        | WHILE LPAREN expression RPAREN LBRACE program RBRACE
+        ;
+
+statement : IDENTIFIER
+          | WHILE LPAREN expression RPAREN statement
+          ;
+
+expression : IDENTIFIER
+           | NUM
+           ;
+
+%%
+
+int main() {
+    yyparse();
+    printf("Valid");
+    return 0;
+}
+
+void yyerror() {
+    printf("Syntax error" );
+    exit(1);
+
+}

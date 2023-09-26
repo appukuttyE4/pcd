@@ -1,0 +1,70 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void yyerror(const char* s);
+
+typedef struct {
+    char* scheme;
+    char* host;
+    char* path;
+    char* query;
+} URL;
+
+URL parsed_url;
+
+%}
+
+%union {
+    char* str;
+}
+
+%token HTTP HTTPS HOST SLASH QUESTION_MARK QUERY
+
+%type <str> url scheme host path query
+
+%%
+url: scheme HOST path query
+   {
+       parsed_url.scheme = $1;
+       parsed_url.host = $2;
+       parsed_url.path = $3;
+       parsed_url.query = $4;
+   }
+   ;
+
+scheme: HTTP
+      | HTTPS
+      ;
+
+host: HOST
+    ;
+
+path: SLASH
+    | SLASH QUERY
+    ;
+
+query: /* Empty query */
+     | QUESTION_MARK QUERY
+     ;
+
+%%
+
+void yyerror(const char* s) {
+    fprintf(stderr, "Parser error: %s\n", s);
+    exit(EXIT_FAILURE);
+}
+
+int main(void) {
+    printf("Enter a URL: ");
+    yyparse();
+    
+    printf("Parsed URL:\n");
+    printf("Scheme: %s\n", parsed_url.scheme);
+    printf("Host: %s\n", parsed_url.host);
+    printf("Path: %s\n", parsed_url.path);
+    printf("Query: %s\n", parsed_url.query);
+    
+    return 0;
+}

@@ -1,0 +1,92 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void yyerror(const char* s);
+
+typedef struct {
+    char* name;
+    int value;
+} Variable;
+
+Variable symbol_table[26]; // Assuming a maximum of 26 variables (A-Z)
+
+int find_variable(char* name) {
+    for (int i = 0; i < 26; i++) {
+        if (symbol_table[i].name && strcmp(symbol_table[i].name, name) == 0) {
+            return i;
+        }
+    }
+    return -1; // Variable not found
+}
+
+%}
+
+%union {
+    int num;
+    char* str;
+}
+
+%token PLUS MINUS TIMES DIVIDE LPAREN RPAREN ASSIGN NUMBER IDENTIFIER
+
+%type <num> expression term factor
+%type <str> variable
+
+%%
+program: statement
+       | program statement
+       ;
+
+statement: assignment_stmt
+         | expression
+         ;
+
+assignment_stmt: IDENTIFIER ASSIGN expression
+              {
+                  int index = find_variable($1);
+                  if (index != -1) {
+                      symbol_table[index].value = $3;
+                  } else {
+                      yyerror("Undefined variable");
+                  }
+              }
+              ;
+
+expression: term
+          | expression PLUS term
+          | expression MINUS term
+          ;
+
+term: factor
+    | term TIMES factor
+    | term DIVIDE factor
+    ;
+
+factor: NUMBER
+      | LPAREN expression RPAREN
+      | variable
+      ;
+
+variable: IDENTIFIER
+        {
+            int index = find_variable($1);
+            if (index != -1) {
+                $$ = symbol_table[index].value;
+            } else {
+                yyerror("Undefined variable");
+                $$ = 0;
+            }
+        }
+        ;
+
+%%
+
+void yyerror(const char* s) {
+    fprintf(stderr, "Syntax error: %s\n", s);
+}
+
+int main(void) {
+    yyparse();
+    return 0;
+}

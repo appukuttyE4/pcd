@@ -1,0 +1,19 @@
+%{
+#include "y.tab.h"
+%}
+
+%%
+[ \t\n]       ;  // Ignore whitespace and newline
+
+"while"       { return WHILE; }
+"("           { return LPAREN; }
+")"           { return RPAREN; }
+"{"           { return LBRACE; }
+"}"           { return RBRACE; }
+[a-zA-Z0-9]+ {  return IDENTIFIER; }
+";"           { return SEMICOLON; }
+%%
+
+int yywrap() {
+    return 1;
+}

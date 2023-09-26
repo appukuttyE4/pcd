@@ -1,0 +1,12 @@
+%{
+#include "y.tab.h"
+%}
+
+%%
+"http://"       { return HTTP; }
+"https://"      { return HTTPS; }
+[0-9a-zA-Z_]+   { yylval.str = strdup(yytext); return HOST; }
+"/"             { return SLASH; }
+"?"             { return QUESTION_MARK; }
+[a-zA-Z0-9_=&]+ { yylval.str = strdup(yytext); return QUERY; }
+.               { return yytext[0]; }

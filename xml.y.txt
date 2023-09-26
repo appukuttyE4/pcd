@@ -1,0 +1,74 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void yyerror(const char* s);
+
+typedef struct {
+    char* name;
+    char* value;
+} Attribute;
+
+#define MAX_ATTRIBUTES 100
+Attribute attributes[MAX_ATTRIBUTES];
+int num_attributes = 0;
+
+%}
+
+%union {
+    char* str;
+}
+
+%token OPEN_TAG CLOSE_TAG SELF_CLOSING_TAG EQUALS IDENTIFIER STRING
+
+%type <str> tag attributes attribute content
+
+%%
+xml: tag
+   ;
+
+tag: OPEN_TAG IDENTIFIER CLOSE_TAG content CLOSE_TAG
+   ;
+
+attributes: attribute
+          | attributes attribute
+          ;
+
+attribute: IDENTIFIER EQUALS STRING
+         {
+             if (num_attributes < MAX_ATTRIBUTES) {
+                 attributes[num_attributes].name = $1;
+                 attributes[num_attributes].value = $3;
+                 num_attributes++;
+             } else {
+                 yyerror("Maximum number of attributes exceeded.");
+             }
+         }
+         ;
+
+content: STRING
+       | SELF_CLOSING_TAG
+       | tag
+       | content STRING
+       | content SELF_CLOSING_TAG
+       | content tag
+       ;
+
+%%
+
+void yyerror(const char* s) {
+    fprintf(stderr, "Parser error: %s\n", s);
+    exit(EXIT_FAILURE);
+}
+
+int main(void) {
+    yyparse();
+    
+    printf("Parsed XML Tags and Attributes:\n");
+    for (int i = 0; i < num_attributes; i++) {
+        printf("Tag: %s, Attribute: %s, Value: %s\n", tag_name, attributes[i].name, attributes[i].value);
+    }
+
+    return 0;
+}

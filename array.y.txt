@@ -1,0 +1,91 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void yyerror(const char* s);
+
+typedef struct {
+    char* name;
+    int size;
+    int* data;
+} Array;
+
+Array array_table[100]; // Assuming a maximum of 100 arrays
+
+int find_array(char* name) {
+    for (int i = 0; i < 100; i++) {
+        if (array_table[i].name && strcmp(array_table[i].name, name) == 0) {
+            return i;
+        }
+    }
+    return -1; // Array not found
+}
+
+%}
+
+%union {
+    int num;
+    char* str;
+}
+
+%token INT LBRACKET RBRACKET ASSIGN IDENTIFIER NUMBER
+
+%type <str> array_declaration array_name element_assignment
+%type <num> array_index
+
+%%
+program: statement
+       | program statement
+       ;
+
+statement: array_declaration
+         | element_assignment
+         ;
+
+array_declaration: INT array_name LBRACKET NUMBER RBRACKET
+                {
+                    int index = find_array($2);
+                    if (index == -1) {
+                        // Add array to the table
+                        array_table[index].name = $2;
+                        array_table[index].size = $4;
+                        array_table[index].data = (int*)malloc($4 * sizeof(int));
+                    } else {
+                        yyerror("Array redeclaration error");
+                    }
+                }
+                ;
+
+array_name: IDENTIFIER
+          ;
+
+element_assignment: array_name LBRACKET array_index RBRACKET ASSIGN NUMBER
+                {
+                    int index = find_array($1);
+                    if (index != -1) {
+                        int idx = $3;
+                        if (idx >= 0 && idx < array_table[index].size) {
+                            array_table[index].data[idx] = $6;
+                        } else {
+                            yyerror("Array index out of bounds");
+                        }
+                    } else {
+                        yyerror("Undefined array");
+                    }
+                }
+                ;
+
+array_index: NUMBER
+           ;
+
+%%
+
+void yyerror(const char* s) {
+    fprintf(stderr, "Syntax error: %s\n", s);
+}
+
+int main(void) {
+    yyparse();
+    return 0;
+}
